@@ -15,13 +15,15 @@ public class World {
 
     private TerrainNoise terrainNoise;
 
+    private int numChunksHalf = 8;
+
     public World(Renderer renderer) {
         this.terrainNoise = new TerrainNoise(seed);
         this.renderer = renderer;
         // Initialize chunks list and load/generate chunks as needed
         chunks = new ArrayList<>();
-        for (int x = -1; x <= 1; x++) {
-            for (int z = -1; z <= 1; z++) {
+        for (int x = -numChunksHalf; x <= numChunksHalf; x++) {
+            for (int z = -numChunksHalf; z <= numChunksHalf; z++) {
                 chunks.add(new Chunk(terrainNoise, renderer, x, z));
             }
         }

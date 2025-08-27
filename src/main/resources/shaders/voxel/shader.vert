@@ -10,8 +10,11 @@ out vec3 vNormal;
 uniform mat4 uModel;
 uniform mat4 uView;
 uniform mat4 uProjection;
+uniform mat4 uLightSpaceMatrix;
+out vec4 vLightSpacePos;
 
 void main() {
+    vLightSpacePos = uLightSpaceMatrix * uModel * vec4(aPos, 1.0);
     vColor = aColor;
     vNormal = mat3(transpose(inverse(uModel))) * aNormal;
     gl_Position = uProjection * uView * uModel * vec4(aPos, 1.0);
