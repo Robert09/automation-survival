@@ -8,4 +8,6 @@ public interface Renderable {
     Mesh getMesh();
 
     Matrix4f getModelMatrix();
+
+    boolean isVisible();
 }

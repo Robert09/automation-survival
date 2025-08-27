@@ -8,10 +8,10 @@ public class TerrainNoise {
     public TerrainNoise(int seed) {
         noise = new FastNoiseLite(seed);
         noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
-        noise.SetFrequency(0.01f);
-        noise.SetFractalOctaves(4);
-        noise.SetFractalLacunarity(2.0f);
-        noise.SetFractalGain(0.5f);
+        noise.SetFrequency(0.005f);           // Lower frequency = broader hills
+        noise.SetFractalOctaves(1);           // Fewer octaves = less detail
+        noise.SetFractalLacunarity(1.0f);     // Keep features wide
+        noise.SetFractalGain(0.1f);           // Lower gain = smoother transitions
     }
 
     public float getHeight(float x, float z) {

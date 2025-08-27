@@ -51,6 +51,8 @@ public class Main {
             updateCamera(camera, deltaTime);                        // WASD + QE for up/down
             updateMouseLook(camera, lastMouse);          // mouse yaw/pitch
 
+            world.update(deltaTime);
+
             glViewport(0, 0, width, height);
             renderer.render();
             glfwSwapBuffers(window);

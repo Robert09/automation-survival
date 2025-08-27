@@ -174,4 +174,8 @@ public class Mesh implements Renderable {
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
+
+    public boolean isVisible() {
+        return visible;
+    }
 }

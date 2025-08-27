@@ -13,15 +13,15 @@ import java.util.Set;
 
 public class Chunk {
 
-    private static final int CHUNK_SIZE = 16;
+    public static final int CHUNK_SIZE = 16;
     private static final int CHUNK_HEIGHT = 256;
 
     private final byte[][][] blocks = new byte[CHUNK_SIZE][CHUNK_HEIGHT][CHUNK_SIZE];
     private final Renderer renderer;
-    private final int chunkX, chunkZ;
+    public final int chunkX, chunkZ;
     private final TerrainNoise terrainNoise;
 
-    private boolean isVisible = true;
+    public boolean isVisible = true;
 
     public Chunk(TerrainNoise terrainNoise, Renderer renderer, int chunkX, int chunkZ) {
         this.renderer = renderer;
@@ -47,7 +47,7 @@ public class Chunk {
                         blocks[x][y][z] = 2; // stone
                     } else if (y < height - 1) {
                         blocks[x][y][z] = 1; // dirt
-                    } else if (y == height) {
+                    } else if (y == getHighestBlock(x, z)) {
                         blocks[x][y][z] = 3; // grass
                     } else {
                         blocks[x][y][z] = 0; // air
@@ -147,9 +147,9 @@ public class Chunk {
         return blocks[x][y][z];
     }
 
-    public byte getHighestBlock(int x, int z) {
+    public int getHighestBlock(int x, int z) {
         for (int y = CHUNK_HEIGHT - 1; y >= 0; y--) {
-            if (blocks[x][y][z] != 0) return blocks[x][y][z];
+            if (blocks[x][y][z] != 0) return y;
         }
         return 0;
     }

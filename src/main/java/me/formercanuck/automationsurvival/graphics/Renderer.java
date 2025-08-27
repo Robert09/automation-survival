@@ -101,15 +101,22 @@ public class Renderer {
         shader.setMat4("uProjection", camera.getProjection(width, height));
         shader.setMat4("uView", camera.getView());
         shader.setMat4("uLightSpaceMatrix", shadowMap.lightSpaceMatrix);
+        setTimeOfDay("morning");
 
         GL13.glActiveTexture(GL13.GL_TEXTURE0);
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, shadowMap.depthTexture);
         shader.setInt("shadowMap", 0);
 
         for (Mesh mesh : meshes) {
-            shader.setMat4("uModel", mesh.getModelMatrix());
-            mesh.render();
+            if (mesh.isVisible()) {
+                shader.setMat4("uModel", mesh.getModelMatrix());
+                mesh.render();
+            }
         }
+    }
+
+    public Camera getCamera() {
+        return camera;
     }
 
     public void clear() {

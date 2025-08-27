@@ -4,7 +4,8 @@ import org.joml.Matrix4f;
 import org.joml.Vector3f;
 
 public class Camera {
-    public final Vector3f position = new Vector3f(0, 0, 3);
+
+    public final Vector3f position = new Vector3f(0, 70, 0);
     public float yaw = -90f;   // looking down -Z
     public float pitch = 0f;
     public float fov = 70f;
