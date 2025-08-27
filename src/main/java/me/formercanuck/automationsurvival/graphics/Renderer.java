@@ -1,8 +1,10 @@
 package me.formercanuck.automationsurvival.graphics;
 
+import me.formercanuck.automationsurvival.Main;
 import me.formercanuck.automationsurvival.graphics.mesh.Mesh;
 import me.formercanuck.automationsurvival.graphics.shader.ShaderProgram;
 import me.formercanuck.automationsurvival.graphics.shadow.ShadowMap;
+import me.formercanuck.automationsurvival.world.Chunk;
 import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 import org.lwjgl.opengl.GL13;
@@ -107,7 +109,8 @@ public class Renderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, shadowMap.depthTexture);
         shader.setInt("shadowMap", 0);
 
-        for (Mesh mesh : meshes) {
+        for (Chunk chunk : Main.getInstance().getWorld().loadedChunks.values()) {
+            Mesh mesh = chunk.getMesh();
             if (mesh.isVisible()) {
                 shader.setMat4("uModel", mesh.getModelMatrix());
                 mesh.render();

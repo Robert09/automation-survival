@@ -21,6 +21,8 @@ public class Chunk {
     public final int chunkX, chunkZ;
     private final TerrainNoise terrainNoise;
 
+    private Mesh mesh;
+
     public boolean isVisible = true;
 
     public Chunk(TerrainNoise terrainNoise, Renderer renderer, int chunkX, int chunkZ) {
@@ -57,7 +59,7 @@ public class Chunk {
         }
     }
 
-    private void buildMesh() {
+    public void buildMesh() {
         List<Float> vertexData = new ArrayList<>();
         List<Integer> indexData = new ArrayList<>();
         int vertexOffset = 0;
@@ -92,8 +94,12 @@ public class Chunk {
             }
         }
 
-        Mesh chunkMesh = new Mesh(toFloatArray(vertexData), toIntArray(indexData));
-        renderer.meshes.add(chunkMesh);
+        mesh = new Mesh(toFloatArray(vertexData), toIntArray(indexData));
+    }
+
+    public Mesh getMesh() {
+        if (mesh == null) buildMesh();
+        return mesh;
     }
 
     private Set<Face> getVisibleFaces(int x, int y, int z) {

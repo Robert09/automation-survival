@@ -16,6 +16,7 @@ public class Main {
     private int width = 1280, height = 720;
 
     private Renderer renderer;
+    private World world;
     private Camera camera;
 
     public void run() {
@@ -32,9 +33,7 @@ public class Main {
         camera = new Camera();
         renderer.setCamera(camera);
 
-        float voxelSize = 0.15f;
-
-        World world = new World(renderer);
+        world = new World(renderer);
 
         // basic input state
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -122,5 +121,18 @@ public class Main {
         cam.pitch = Math.max(-89f, Math.min(89f, cam.pitch));
     }
 
-    public static void main(String[] args) {new Main().run();}
+    private Main() {}
+
+    private static Main instance;
+
+    public static Main getInstance() {
+        if (instance == null) instance = new Main();
+        return instance;
+    }
+
+    public World getWorld() {
+        return world;
+    }
+
+    public static void main(String[] args) {getInstance().run();}
 }
