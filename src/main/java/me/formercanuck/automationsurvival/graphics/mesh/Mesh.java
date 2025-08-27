@@ -106,11 +106,13 @@ public class Mesh implements Renderable {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, ibuf, GL_STATIC_DRAW);
 
         // layout (location=0) position, (location=1) color
-        int stride = 6 * Float.BYTES;
-        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L);
+        int stride = 9 * Float.BYTES;
+        glVertexAttribPointer(0, 3, GL_FLOAT, false, stride, 0L); // position
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(1, 3, GL_FLOAT, false, stride, 3L * Float.BYTES);
+        glVertexAttribPointer(1, 3, GL_FLOAT, false, stride, 3L * Float.BYTES); // color
         glEnableVertexAttribArray(1);
+        glVertexAttribPointer(2, 3, GL_FLOAT, false, stride, 6L * Float.BYTES); // normal
+        glEnableVertexAttribArray(2);
 
         MemoryUtil.memFree(vbuf);
         MemoryUtil.memFree(ibuf);

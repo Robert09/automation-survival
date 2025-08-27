@@ -2,6 +2,7 @@ package me.formercanuck.automationsurvival.graphics;
 
 import me.formercanuck.automationsurvival.graphics.mesh.Mesh;
 import me.formercanuck.automationsurvival.graphics.shader.ShaderProgram;
+import org.joml.Vector3f;
 import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
@@ -22,6 +23,8 @@ public class Renderer {
         GL11.glEnable(GL11.GL_DEPTH_TEST); // Enable depth testing
         GL11.glClearColor(0.5f, 0.7f, 1.0f, 0.0f); // Set clear color (blue sky)
         System.out.println(meshes.size());
+
+        shader.setVec3("uLightDir", new Vector3f(-0.5f, -1.0f, -0.3f).normalize());
     }
 
     public void setCamera(Camera camera) {

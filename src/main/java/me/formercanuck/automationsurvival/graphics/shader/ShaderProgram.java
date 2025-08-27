@@ -3,6 +3,7 @@ package me.formercanuck.automationsurvival.graphics.shader;
 import static org.lwjgl.opengl.GL20.*;
 import static org.lwjgl.opengl.GL30.*;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.lwjgl.system.MemoryStack;
 import java.nio.FloatBuffer;
 import java.nio.file.Files;
@@ -51,4 +52,9 @@ public class ShaderProgram {
     }
 
     public void delete() { glDeleteProgram(programId); }
+
+    public void setVec3(String uLightDir, Vector3f normalize) {
+        int loc = glGetUniformLocation(programId, uLightDir);
+        glUniform3f(loc, normalize.x, normalize.y, normalize.z);
+    }
 }
