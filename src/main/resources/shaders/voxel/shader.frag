@@ -14,17 +14,23 @@ in vec4 vLightSpacePos;
 float calculateShadow(vec4 lightSpacePos) {
     vec3 projCoords = lightSpacePos.xyz / lightSpacePos.w;
     projCoords = projCoords * 0.5 + 0.5;
+    projCoords = clamp(projCoords, 0.0, 1.0); // Prevent out-of-bounds sampling
+
     float closestDepth = texture(shadowMap, projCoords.xy).r;
     float currentDepth = projCoords.z;
-    float bias = 0.005;
-    float shadow = currentDepth - bias > closestDepth ? 0.2 : 1.0;
+    float bias = 0.01; // Slightly increased to reduce shadow acne
+
+    float shadow = currentDepth - bias > closestDepth ? 0.5 : 1.0;
     return shadow;
 }
 
 void main() {
     float shadow = calculateShadow(vLightSpacePos);
     float diffuse = max(dot(normalize(vNormal), normalize(-uLightDir)), 0.0);
-    float brightness = max(uAmbient + diffuse, uAmbient);
-    vec3 litColor = vColor * brightness * shadow;
-    fragColor = vec4(litColor, 1.0);
+
+    vec3 ambientColor = vColor * uAmbient;
+    vec3 diffuseColor = vColor * diffuse * shadow;
+
+    vec3 litColor = ambientColor + diffuseColor;
+    fragColor = vec4(vColor * uAmbient, 1.0);
 }

@@ -78,8 +78,8 @@ public class ShaderProgram {
         glDeleteProgram(programId);
     }
 
-    public void setFloat(String uAmbient, float v) {
-        int loc = glGetUniformLocation(programId, uAmbient);
-        glUniform1f(loc, v);
+    public void setFloat(String name, float value) {
+        int loc = glGetUniformLocation(programId, name);
+        glUniform1f(loc, value);
     }
 }
