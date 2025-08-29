@@ -2,6 +2,7 @@ package me.formercanuck.automationsurvival;
 
 import me.formercanuck.automationsurvival.graphics.Camera;
 import me.formercanuck.automationsurvival.graphics.Renderer;
+import me.formercanuck.automationsurvival.world.TerrainNoise;
 import me.formercanuck.automationsurvival.world.World;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -33,7 +34,9 @@ public class Main {
         camera = new Camera();
         renderer.setCamera(camera);
 
-        world = new World(renderer);
+        TerrainNoise terrainNoise = new TerrainNoise(3812);
+
+        world = new World(terrainNoise, renderer);
 
         // basic input state
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -50,7 +53,7 @@ public class Main {
             updateCamera(camera, deltaTime);                        // WASD + QE for up/down
             updateMouseLook(camera, lastMouse);          // mouse yaw/pitch
 
-            world.update(deltaTime);
+            world.update(camera.position);
 
             glViewport(0, 0, width, height);
             renderer.render();

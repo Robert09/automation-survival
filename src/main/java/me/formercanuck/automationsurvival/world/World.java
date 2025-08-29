@@ -1,9 +1,10 @@
 package me.formercanuck.automationsurvival.world;
 
 import me.formercanuck.automationsurvival.graphics.Renderer;
-import me.formercanuck.automationsurvival.threading.ChunkTask;
-import me.formercanuck.automationsurvival.util.Constants;
-import org.joml.Math;
+import me.formercanuck.automationsurvival.graphics.mesh.Mesh;
+import me.formercanuck.automationsurvival.world.chunk.ChunkBuilder;
+import me.formercanuck.automationsurvival.world.chunk.ChunkData;
+import me.formercanuck.automationsurvival.world.chunk.GpuChunkGenerator;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
@@ -14,65 +15,35 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class World {
+    public final Map<Vector2i, Chunk> chunks = new HashMap<>();
+    private final TerrainNoise terrainNoise;
+    private final Renderer renderer;
 
-    public Map<Vector2i, Chunk> chunks = new HashMap<>();
+    private final int chunkSize = 16;
+    private final float voxelSize = 0.1f;
+    private final int radius = 4;
 
-    private Renderer renderer;
+    private GpuChunkGenerator gpuGen = new GpuChunkGenerator();
 
-    private int seed = 3812;
-
-    private TerrainNoise terrainNoise;
-
-    private int numChunksHalf = 16;
-
-    private ExecutorService chunkExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
-    private Queue<Future<Chunk>> pendingChunks = new ConcurrentLinkedQueue<>();
-
-    public World(Renderer renderer) {
-        this.terrainNoise = new TerrainNoise(seed);
+    public World(TerrainNoise terrainNoise, Renderer renderer) {
+        this.terrainNoise = terrainNoise;
         this.renderer = renderer;
-        for (int x = -numChunksHalf; x <= numChunksHalf; x++) {
-            for (int z = -numChunksHalf; z <= numChunksHalf; z++) {
-                Vector2i coord = new Vector2i(x, z);
-                if (!chunks.containsKey(coord)) {
-                    Future<Chunk> future = chunkExecutor.submit(new ChunkTask(x, z, terrainNoise, renderer));
-                    pendingChunks.add(future);
-                }
-            }
-        }
     }
 
-    public void update(double deltaTime) {
-        while (!pendingChunks.isEmpty()) {
-            Future<Chunk> future = pendingChunks.peek();
-            if (future.isDone()) {
-                try {
-                    Chunk chunk = future.get();
-                    chunks.put(new Vector2i(chunk.getChunkX(), chunk.getChunkZ()), chunk);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                pendingChunks.poll();
-            } else {
-                break;
-            }
-        }
-        Vector3f cameraPos = renderer.getCamera().position;
-        int camChunkX = (int) Math.floor(cameraPos.x / (Constants.CHUNK_SIZE * Constants.VOXEL_SIZE));
-        int camChunkZ = (int) Math.floor(cameraPos.z / (Constants.CHUNK_SIZE * Constants.VOXEL_SIZE));
+    public void update(Vector3f camPos) {
+        int camChunkX = (int) Math.floor(camPos.x / (chunkSize * voxelSize));
+        int camChunkZ = (int) Math.floor(camPos.z / (chunkSize * voxelSize));
 
         Set<Vector2i> active = new HashSet<>();
 
-        int renderRadius = Constants.RENDER_DISTANCE_CHUNKS;
-
-        for (int dx = -renderRadius; dx <= renderRadius; dx++) {
-            for (int dz = -renderRadius; dz <= renderRadius; dz++) {
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dz = -radius; dz <= radius; dz++) {
                 Vector2i coord = new Vector2i(camChunkX + dx, camChunkZ + dz);
                 active.add(coord);
 
                 if (!chunks.containsKey(coord)) {
-                    Future<Chunk> future = chunkExecutor.submit(new ChunkTask(coord.x, coord.y, terrainNoise, renderer));
-                    pendingChunks.add(future);
+                    Future<ChunkData> future = executor.submit(new ChunkBuilder(coord.x, coord.y, terrainNoise));
+                    pending.add(future);
                 }
             }
         }
@@ -82,19 +53,30 @@ public class World {
             if (!active.contains(coord)) {
                 Chunk chunk = chunks.get(coord);
                 chunk.setVisible(false);
+                renderer.toRemove.add(chunk.getMesh());
                 return true;
             }
             return false;
         });
 
-    }
-
-    public Chunk getChunkAt(int chunkX, int chunkZ) {
-        for (Chunk chunk : chunks.values()) {
-            if (chunk.chunkX == chunkX && chunk.chunkZ == chunkZ) {
-                return chunk;
+        // Process finished chunk tasks
+        while (!pending.isEmpty()) {
+            Future<ChunkData> future = pending.peek();
+            if (future.isDone()) {
+                try {
+                    ChunkData data = future.get();
+                    Chunk chunk = new Chunk(data.chunkX, data.chunkZ);
+                    Mesh mesh = new Mesh(data.vertices, data.indices);
+                    chunk.setMesh(mesh);
+                    chunks.put(new Vector2i(data.chunkX, data.chunkZ), chunk);
+                    renderer.meshes.add(mesh);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                pending.poll();
+            } else {
+                break;
             }
         }
-        return null;
     }
 }
