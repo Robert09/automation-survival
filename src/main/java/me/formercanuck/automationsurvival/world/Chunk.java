@@ -3,6 +3,7 @@ package me.formercanuck.automationsurvival.world;
 import me.formercanuck.automationsurvival.graphics.Renderer;
 import me.formercanuck.automationsurvival.graphics.mesh.Mesh;
 import me.formercanuck.automationsurvival.util.Color;
+import me.formercanuck.automationsurvival.util.Constants;
 import me.formercanuck.automationsurvival.util.FaceGeometry;
 import org.joml.Vector3f;
 
@@ -49,10 +50,12 @@ public class Chunk {
                         blocks[x][y][z] = 2; // stone
                     } else if (y < height - 1) {
                         blocks[x][y][z] = 1; // dirt
-                    } else if (y == getHighestBlock(x, z)) {
-                        blocks[x][y][z] = 3; // grass
                     } else {
                         blocks[x][y][z] = 0; // air
+                    }
+
+                    if (y == getHighestBlock(x, z)) {
+                        blocks[x][y][z] = 3; // grass
                     }
                 }
             }
@@ -63,7 +66,7 @@ public class Chunk {
         List<Float> vertexData = new ArrayList<>();
         List<Integer> indexData = new ArrayList<>();
         int vertexOffset = 0;
-        float voxelSize = 0.1f;
+        float voxelSize = Constants.VOXEL_SIZE;
 
         for (int x = 0; x < CHUNK_SIZE; x++) {
             for (int z = 0; z < CHUNK_SIZE; z++) {

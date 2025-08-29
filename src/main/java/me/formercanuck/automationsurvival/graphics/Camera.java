@@ -22,7 +22,7 @@ public class Camera {
     }
 
     public Matrix4f getProjection(int width, int height) {
-        return new Matrix4f().perspective((float) Math.toRadians(fov), (float) width / height, 0.1f, 200f);
+        return new Matrix4f().perspective((float) Math.toRadians(fov), (float) width / height, 0.1f, 1000f);
     }
 
     private void updateVectors() {

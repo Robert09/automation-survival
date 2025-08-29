@@ -109,7 +109,7 @@ public class Renderer {
         GL11.glBindTexture(GL11.GL_TEXTURE_2D, shadowMap.depthTexture);
         shader.setInt("shadowMap", 0);
 
-        for (Chunk chunk : Main.getInstance().getWorld().loadedChunks.values()) {
+        for (Chunk chunk : Main.getInstance().getWorld().chunks.values()) {
             Mesh mesh = chunk.getMesh();
             if (mesh.isVisible()) {
                 shader.setMat4("uModel", mesh.getModelMatrix());

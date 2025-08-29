@@ -7,11 +7,13 @@ import org.joml.Vector2i;
 import org.joml.Vector3f;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class World {
 
-    public Map<Vector2i, Chunk> loadedChunks = new HashMap<>();
+    public Map<Vector2i, Chunk> chunks = new HashMap<>();
 
     private Renderer renderer;
 
@@ -26,39 +28,46 @@ public class World {
         this.renderer = renderer;
         for (int x = -numChunksHalf; x <= numChunksHalf; x++) {
             for (int z = -numChunksHalf; z <= numChunksHalf; z++) {
-                loadedChunks.put(new Vector2i(x, z), new Chunk(terrainNoise, renderer, x, z));
+                chunks.put(new Vector2i(x, z), new Chunk(terrainNoise, renderer, x, z));
             }
         }
     }
 
     public void update(double deltaTime) {
-        int chunkSize = 16;
-        Vector3f camPos = renderer.getCamera().position;
-        int camChunkX = (int) Math.floor(camPos.x / (chunkSize * Constants.VOXEL_SIZE));
-        int camChunkZ = (int) Math.floor(camPos.z / (chunkSize * Constants.VOXEL_SIZE));
+        Vector3f cameraPos = renderer.getCamera().position;
+        int camChunkX = (int) Math.floor(cameraPos.x / (Constants.CHUNK_SIZE * Constants.VOXEL_SIZE));
+        int camChunkZ = (int) Math.floor(cameraPos.z / (Constants.CHUNK_SIZE * Constants.VOXEL_SIZE));
 
-        int R = Constants.RENDER_DISTANCE_CHUNKS; // radius in chunks
+        Set<Vector2i> active = new HashSet<>();
 
-        for (int dx = -R; dx <= R; dx++) {
-            for (int dz = -R; dz <= R; dz++) {
-                Vector2i chunkCoord = new Vector2i(camChunkX + dx, camChunkZ + dz);
-                if (!loadedChunks.containsKey(chunkCoord)) {
-                    Chunk chunk = new Chunk(terrainNoise, renderer, chunkCoord.x, chunkCoord.y);
-                    loadedChunks.put(chunkCoord, chunk);
+        int renderRadius = Constants.RENDER_DISTANCE_CHUNKS;
+
+        for (int dx = -renderRadius; dx <= renderRadius; dx++) {
+            for (int dz = -renderRadius; dz <= renderRadius; dz++) {
+                Vector2i coord = new Vector2i(camChunkX + dx, camChunkZ + dz);
+                active.add(coord);
+
+                if (!chunks.containsKey(coord)) {
+                    Chunk chunk = new Chunk(terrainNoise, renderer, coord.x, coord.y);
+                    chunks.put(coord, chunk);
                 }
             }
         }
 
-        loadedChunks.entrySet().removeIf(entry -> {
-            Vector2i coord = entry.getKey();
-            int dx = Math.abs(coord.x - camChunkX);
-            int dz = Math.abs(coord.y - camChunkZ);
-            return dx > R || dz > R;
+        // Unload distant chunks
+        chunks.keySet().removeIf(coord -> {
+            if (!active.contains(coord)) {
+                Chunk chunk = chunks.get(coord);
+                chunk.setVisible(false);
+                return true;
+            }
+            return false;
         });
+
     }
 
     public Chunk getChunkAt(int chunkX, int chunkZ) {
-        for (Chunk chunk : loadedChunks.values()) {
+        for (Chunk chunk : chunks.values()) {
             if (chunk.chunkX == chunkX && chunk.chunkZ == chunkZ) {
                 return chunk;
             }
