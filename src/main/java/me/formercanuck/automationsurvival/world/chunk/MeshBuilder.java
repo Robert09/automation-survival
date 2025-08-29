@@ -27,19 +27,48 @@ public class MeshBuilder {
                     );
 
                     for (Face face : Face.values()) {
-                        float[] color = new float[]{0.4f, 0.8f, 0.4f};
-                        float[] faceVerts = FaceGeometry.getFaceVertices(face, pos, voxelSize / 2, color);
-                        int[] faceIndices = FaceGeometry.getFaceIndices(vertexOffset);
+                        if (isFaceVisible(voxels, x, y, z, face, chunkSize, chunkHeight)) {
+                            float[] color = getColorForFace(face, y, chunkHeight);
+                            float[] faceVerts = FaceGeometry.getFaceVertices(face, pos, voxelSize / 2, color);
+                            int[] faceIndices = FaceGeometry.getFaceIndices(vertexOffset);
 
-                        for (float v : faceVerts) vertices.add(v);
-                        for (int i : faceIndices) indices.add(i);
-                        vertexOffset += 4;
+                            for (float v : faceVerts) vertices.add(v);
+                            for (int i : faceIndices) indices.add(i);
+                            vertexOffset += 4;
+                        }
                     }
                 }
             }
         }
 
         return new Mesh(toFloatArray(vertices), toIntArray(indices));
+    }
+
+    private static boolean isFaceVisible(int[] voxels, int x, int y, int z, Face face, int chunkSize, int chunkHeight) {
+        int nx = x, ny = y, nz = z;
+        switch (face) {
+            case FRONT -> nz += 1;
+            case BACK -> nz -= 1;
+            case RIGHT -> nx += 1;
+            case LEFT -> nx -= 1;
+            case TOP -> ny += 1;
+            case BOTTOM -> ny -= 1;
+        }
+
+        if (nx < 0 || nx >= chunkSize || ny < 0 || ny >= chunkHeight || nz < 0 || nz >= chunkSize) return true;
+        int neighborIndex = nx + ny * chunkSize + nz * chunkSize * chunkHeight;
+        return voxels[neighborIndex] == 0;
+    }
+
+    private static float[] getColorForFace(Face face, int y, int chunkHeight) {
+        return switch (face) {
+            case TOP -> new float[]{0.6f, 0.9f, 0.6f};
+            case BOTTOM -> new float[]{0.3f, 0.5f, 0.3f};
+            default -> {
+                float shade = 0.4f + (y / (float) chunkHeight) * 0.4f;
+                yield new float[]{shade, shade, shade};
+            }
+        };
     }
 
     private static float[] toFloatArray(List<Float> list) {
