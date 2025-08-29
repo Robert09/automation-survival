@@ -1,15 +1,17 @@
 package me.formercanuck.automationsurvival.world;
 
 import me.formercanuck.automationsurvival.graphics.Renderer;
+import me.formercanuck.automationsurvival.threading.ChunkTask;
 import me.formercanuck.automationsurvival.util.Constants;
 import org.joml.Math;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class World {
 
@@ -23,17 +25,38 @@ public class World {
 
     private int numChunksHalf = 16;
 
+    private ExecutorService chunkExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    private Queue<Future<Chunk>> pendingChunks = new ConcurrentLinkedQueue<>();
+
     public World(Renderer renderer) {
         this.terrainNoise = new TerrainNoise(seed);
         this.renderer = renderer;
         for (int x = -numChunksHalf; x <= numChunksHalf; x++) {
             for (int z = -numChunksHalf; z <= numChunksHalf; z++) {
-                chunks.put(new Vector2i(x, z), new Chunk(terrainNoise, renderer, x, z));
+                Vector2i coord = new Vector2i(x, z);
+                if (!chunks.containsKey(coord)) {
+                    Future<Chunk> future = chunkExecutor.submit(new ChunkTask(x, z, terrainNoise, renderer));
+                    pendingChunks.add(future);
+                }
             }
         }
     }
 
     public void update(double deltaTime) {
+        while (!pendingChunks.isEmpty()) {
+            Future<Chunk> future = pendingChunks.peek();
+            if (future.isDone()) {
+                try {
+                    Chunk chunk = future.get();
+                    chunks.put(new Vector2i(chunk.getChunkX(), chunk.getChunkZ()), chunk);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                pendingChunks.poll();
+            } else {
+                break;
+            }
+        }
         Vector3f cameraPos = renderer.getCamera().position;
         int camChunkX = (int) Math.floor(cameraPos.x / (Constants.CHUNK_SIZE * Constants.VOXEL_SIZE));
         int camChunkZ = (int) Math.floor(cameraPos.z / (Constants.CHUNK_SIZE * Constants.VOXEL_SIZE));
@@ -48,8 +71,8 @@ public class World {
                 active.add(coord);
 
                 if (!chunks.containsKey(coord)) {
-                    Chunk chunk = new Chunk(terrainNoise, renderer, coord.x, coord.y);
-                    chunks.put(coord, chunk);
+                    Future<Chunk> future = chunkExecutor.submit(new ChunkTask(coord.x, coord.y, terrainNoise, renderer));
+                    pendingChunks.add(future);
                 }
             }
         }

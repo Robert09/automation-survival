@@ -62,6 +62,14 @@ public class Chunk {
         }
     }
 
+    public int getChunkX() {
+        return chunkX;
+    }
+
+    public int getChunkZ() {
+        return chunkZ;
+    }
+
     public void buildMesh() {
         List<Float> vertexData = new ArrayList<>();
         List<Integer> indexData = new ArrayList<>();
