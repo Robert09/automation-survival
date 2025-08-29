@@ -2,32 +2,30 @@ package me.formercanuck.automationsurvival.world;
 
 import me.formercanuck.automationsurvival.graphics.Renderer;
 import me.formercanuck.automationsurvival.graphics.mesh.Mesh;
-import me.formercanuck.automationsurvival.world.chunk.ChunkBuilder;
-import me.formercanuck.automationsurvival.world.chunk.ChunkData;
 import me.formercanuck.automationsurvival.world.chunk.GpuChunkGenerator;
+import me.formercanuck.automationsurvival.world.chunk.MeshBuilder;
 import org.joml.Vector2i;
 import org.joml.Vector3f;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 
 public class World {
     public final Map<Vector2i, Chunk> chunks = new HashMap<>();
+    private final Queue<Vector2i> chunkQueue = new ConcurrentLinkedQueue<>();
     private final TerrainNoise terrainNoise;
     private final Renderer renderer;
+    private final GpuChunkGenerator gpuGen;
 
     private final int chunkSize = 16;
     private final float voxelSize = 0.1f;
+    private final int chunkHeight = 128;
     private final int radius = 4;
-
-    private GpuChunkGenerator gpuGen = new GpuChunkGenerator();
 
     public World(TerrainNoise terrainNoise, Renderer renderer) {
         this.terrainNoise = terrainNoise;
         this.renderer = renderer;
+        this.gpuGen = new GpuChunkGenerator();
     }
 
     public void update(Vector3f camPos) {
@@ -41,9 +39,8 @@ public class World {
                 Vector2i coord = new Vector2i(camChunkX + dx, camChunkZ + dz);
                 active.add(coord);
 
-                if (!chunks.containsKey(coord)) {
-                    Future<ChunkData> future = executor.submit(new ChunkBuilder(coord.x, coord.y, terrainNoise));
-                    pending.add(future);
+                if (!chunks.containsKey(coord) && !chunkQueue.contains(coord)) {
+                    chunkQueue.add(coord);
                 }
             }
         }
@@ -59,24 +56,15 @@ public class World {
             return false;
         });
 
-        // Process finished chunk tasks
-        while (!pending.isEmpty()) {
-            Future<ChunkData> future = pending.peek();
-            if (future.isDone()) {
-                try {
-                    ChunkData data = future.get();
-                    Chunk chunk = new Chunk(data.chunkX, data.chunkZ);
-                    Mesh mesh = new Mesh(data.vertices, data.indices);
-                    chunk.setMesh(mesh);
-                    chunks.put(new Vector2i(data.chunkX, data.chunkZ), chunk);
-                    renderer.meshes.add(mesh);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                pending.poll();
-            } else {
-                break;
-            }
+        // Process one chunk per frame (optional throttle)
+        if (!chunkQueue.isEmpty()) {
+            Vector2i coord = chunkQueue.poll();
+            int[] voxelData = gpuGen.generateChunk(coord.x, coord.y);
+            Mesh mesh = MeshBuilder.buildMeshFromVoxelData(voxelData, coord.x, coord.y, chunkSize, chunkHeight, voxelSize);
+            Chunk chunk = new Chunk(coord.x, coord.y);
+            chunk.setMesh(mesh);
+            chunks.put(coord, chunk);
+            renderer.meshes.add(mesh);
         }
     }
 }

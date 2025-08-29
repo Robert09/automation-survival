@@ -17,7 +17,7 @@ public class GpuChunkGenerator {
     private final int chunkHeight = 128;
 
     public GpuChunkGenerator() {
-        computeProgram = ShaderUtils.createComputeShader("shaders/compute/VoxelCompute.glsl");
+        computeProgram = ShaderUtils.createComputeShader("E:\\Dev\\AutomationSurvival - Test\\src\\main\\resources\\shaders\\compute\\VoxelCompute.glsl");
         ssbo = GL15.glGenBuffers();
         GL15.glBindBuffer(GL43.GL_SHADER_STORAGE_BUFFER, ssbo);
         GL15.glBufferData(GL43.GL_SHADER_STORAGE_BUFFER, chunkSize * chunkHeight * chunkSize * Integer.BYTES, GL15.GL_DYNAMIC_DRAW);
