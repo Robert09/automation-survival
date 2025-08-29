@@ -2,6 +2,7 @@ package me.formercanuck.automationsurvival;
 
 import me.formercanuck.automationsurvival.graphics.Camera;
 import me.formercanuck.automationsurvival.graphics.Renderer;
+import me.formercanuck.automationsurvival.world.TerrainNoise;
 import me.formercanuck.automationsurvival.world.World;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.glfw.GLFWVidMode;
@@ -33,7 +34,9 @@ public class Main {
         camera = new Camera();
         renderer.setCamera(camera);
 
-        world = new World(renderer);
+        TerrainNoise terrainNoise = new TerrainNoise(3812);
+
+        world = new World(terrainNoise, renderer);
 
         // basic input state
         glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -50,7 +53,7 @@ public class Main {
             updateCamera(camera, deltaTime);                        // WASD + QE for up/down
             updateMouseLook(camera, lastMouse);          // mouse yaw/pitch
 
-            world.update(deltaTime);
+            world.update(camera.position);
 
             glViewport(0, 0, width, height);
             renderer.render();
@@ -94,10 +97,10 @@ public class Main {
 
     // --- controls: WASD + Q/E, shift to speed up ---
     private void updateCamera(Camera cam, double dt) {
-        float base = 0.02f;
+        float base = 0.1f;
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) base *= 4;
 
-        base *= dt * 60; // frame-rate normalize
+        base *= (float) (dt * 60); // frame-rate normalize
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) cam.moveForward(base);
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) cam.moveForward(-base);
