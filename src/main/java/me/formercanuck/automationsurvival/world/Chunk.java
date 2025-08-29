@@ -2,6 +2,10 @@ package me.formercanuck.automationsurvival.world;
 
 import me.formercanuck.automationsurvival.graphics.mesh.Mesh;
 
+/**
+ * Represents a single chunk in the world.
+ * Stores its mesh and visibility state.
+ */
 public class Chunk {
     private final int chunkX, chunkZ;
     private Mesh mesh;
