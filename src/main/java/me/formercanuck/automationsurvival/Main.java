@@ -97,10 +97,10 @@ public class Main {
 
     // --- controls: WASD + Q/E, shift to speed up ---
     private void updateCamera(Camera cam, double dt) {
-        float base = 0.02f;
+        float base = 0.1f;
         if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) base *= 4;
 
-        base *= dt * 60; // frame-rate normalize
+        base *= (float) (dt * 60); // frame-rate normalize
 
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) cam.moveForward(base);
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) cam.moveForward(-base);
